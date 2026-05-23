@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Para Ti, Amor Mío ❤️</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --noir: #080810;
+    --morado: #1a0a2e;
+    --morado-mid: #2d1054;
+    --rosa: #e8b4d0;
+    --rosa-neo: #ff6eb4;
+    --azul: #0d1b3e;
+    --azul-glow: #4a9eff;
+    --blanco: #f0e8f4;
+    --oro: #c9a96e;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--noir);
+    color: var(--blanco);
+    font-family: 'Jost', sans-serif;
+    font-weight: 200;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* ── INTRO SCREEN ── */
+  #intro {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--noir);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 2rem;
+    transition: opacity 1.8s ease, transform 1.8s ease;
+  }
+  #intro.fade-out { opacity: 0; transform: scale(1.04); pointer-events: none; }
+
+  #canvas-intro {
+    position: absolute; inset: 0;
+    pointer-events: none;
+  }
+
+  .intro-content { position: relative; z-index: 2; }
+
+  .intro-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.8rem, 5vw, 3.4rem);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--blanco);
+    line-height: 1.3;
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 60px rgba(232, 180, 208, 0.4);
+    margin-bottom: 1rem;
+    opacity: 0;
+    animation: fadeUp 1.2s ease 0.5s forwards;
+  }
+
+  .intro-sub {
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    font-weight: 200;
+    color: rgba(240, 232, 244, 0.6);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeUp 1.2s ease 1s forwards;
+  }
+
+  .btn-entrar {
+    position: relative;
+    background: transparent;
+    border: 1px solid rgba(232, 180, 208, 0.5);
+    color: var(--rosa);
+    font-family: 'Jost', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    padding: 1.1rem 3rem;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    opacity: 0;
+    animation: fadeUp 1.2s ease 1.5s forwards;
+  }
+  .btn-entrar::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(232,180,208,0.15), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+  .btn-entrar:hover { border-color: var(--rosa-neo); color: var(--blanco); box-shadow: 0 0 30px rgba(255,110,180,0.3); }
+  .btn-entrar:hover::before { transform: translateX(100%); }
+
+  /* ── MAIN CONTENT ── */
+  #main { opacity: 0; transition: opacity 1.5s ease 0.3s; }
+  #main.visible { opacity: 1; }
+
+  /* ── CANVAS BG ── */
+  #bg-canvas {
+    position: fixed; inset: 0; z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── PLAYER ── */
+  #player {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 500;
+    background: rgba(10,5,20,0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(232,180,208,0.2);
+    border-radius: 20px;
+    padding: 1rem 1.4rem;
+    width: 240px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  #player.show { opacity: 1; transform: translateY(0); }
+
+  .player-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(232,180,208,0.5);
+    margin-bottom: 0.5rem;
+  }
+  .player-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--rosa);
+    margin-bottom: 0.8rem;
+  }
+
+  #wave-canvas {
+    width: 100%; height: 36px;
+    margin-bottom: 0.8rem;
+  }
+
+  .player-controls {
+    display: flex; align-items: center; gap: 0.8rem;
+  }
+  .btn-play {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(232,180,208,0.15);
+    border: 1px solid rgba(232,180,208,0.4);
+    color: var(--rosa);
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+  .btn-play:hover { background: rgba(255,110,180,0.2); border-color: var(--rosa-neo); }
+
+  input[type=range].vol {
+    -webkit-appearance: none; appearance: none;
+    flex: 1; height: 2px;
+    background: rgba(232,180,208,0.25);
+    border-radius: 2px; outline: none;
+  }
+  input[type=range].vol::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--rosa); cursor: pointer;
+  }
+
+  /* ── SECTIONS ── */
+  section {
+    position: relative; z-index: 10;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 6rem 1.5rem;
+  }
+
+  /* ── CARTA ── */
+  #carta {
+    background: linear-gradient(180deg, rgba(26,10,46,0) 0%, rgba(26,10,46,0.6) 50%, rgba(26,10,46,0) 100%);
+  }
+
+  .carta-wrapper {
+    max-width: 680px; width: 100%;
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(232,180,208,0.12);
+    border-radius: 24px;
+    padding: clamp(2rem, 5vw, 4rem);
+    position: relative;
+  }
+  .carta-wrapper::before {
+    content: '';
+    position: absolute; top: -1px; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,110,180,0.6), transparent);
+  }
+
+  .section-tag {
+    font-size: 0.65rem; letter-spacing: 0.3em;
+    text-transform: uppercase; color: rgba(232,180,208,0.4);
+    margin-bottom: 2rem; display: block;
+  }
+
+  .carta-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 300; font-style: italic;
+    color: var(--blanco);
+    line-height: 1.2;
+    margin-bottom: 2rem;
+    text-shadow: 0 0 40px rgba(232,180,208,0.2);
+  }
+
+  .carta-text {
+    font-size: clamp(0.95rem, 2vw, 1.05rem);
+    line-height: 2;
+    color: rgba(240,232,244,0.75);
+    font-weight: 200;
+    min-height: 1em;
+  }
+
+  .firma {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 1.2rem;
+    color: var(--rosa); margin-top: 2rem;
+    opacity: 0; transition: opacity 1s ease;
+  }
+  .firma.show { opacity: 1; }
+
+  /* Corazones flotantes */
+  .heart-float {
+    position: absolute; pointer-events: none;
+    font-size: 1rem; opacity: 0;
+    animation: heartFly var(--dur, 4s) ease-in var(--delay, 0s) infinite;
+  }
+  @keyframes heartFly {
+    0% { transform: translateY(0) scale(0.5); opacity: 0; }
+    20% { opacity: 0.6; }
+    100% { transform: translateY(-200px) translateX(var(--dx, 20px)) scale(1); opacity: 0; }
+  }
+
+  /* ── CONTADOR ── */
+  #contador {
+    background: linear-gradient(180deg, rgba(13,27,62,0) 0%, rgba(13,27,62,0.4) 50%, rgba(13,27,62,0) 100%);
+    text-align: center;
+  }
+
+  .counter-grid {
+    display: flex; gap: clamp(1rem, 4vw, 3rem);
+    margin-top: 3rem;
+    flex-wrap: wrap; justify-content: center;
+  }
+
+  .counter-item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 0.5rem;
+  }
+
+  .counter-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 10vw, 6rem);
+    font-weight: 300;
+    color: var(--blanco);
+    line-height: 1;
+    text-shadow: 0 0 60px rgba(74,158,255,0.4);
+    min-width: 3ch; text-align: center;
+  }
+
+  .counter-label {
+    font-size: 0.65rem; letter-spacing: 0.25em;
+    text-transform: uppercase; color: rgba(240,232,244,0.4);
+  }
+
+  .counter-sep {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 4rem; color: rgba(232,180,208,0.3);
+    align-self: flex-start; margin-top: 0.4rem;
+    line-height: 1;
+  }
+
+  /* ── MAPA ── */
+  #mapa {
+    text-align: center;
+  }
+
+  .mapa-canvas-wrap {
+    width: min(500px, 90vw);
+    height: min(300px, 55vw);
+    margin: 3rem auto 0;
+    position: relative;
+  }
+
+  #mapa-svg { width: 100%; height: 100%; }
+
+  /* ── FINAL ── */
+  #final {
+    text-align: center;
+    background: linear-gradient(180deg, rgba(8,8,16,0) 0%, rgba(26,10,46,0.5) 100%);
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  #stars-canvas {
+    position: absolute; inset: 0;
+    pointer-events: none;
+  }
+
+  .final-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 6vw, 4rem);
+    font-weight: 300; font-style: italic;
+    line-height: 1.3;
+    color: var(--blanco);
+    text-shadow: 0 0 80px rgba(232,180,208,0.3);
+    max-width: 700px;
+    position: relative; z-index: 2;
+  }
+
+  .final-love {
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
+    color: var(--rosa);
+    margin-top: 2rem;
+    letter-spacing: 0.1em;
+    position: relative; z-index: 2;
+    text-shadow: 0 0 30px rgba(255,110,180,0.5);
+  }
+
+  /* ── SHARED HEADING ── */
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 300; font-style: italic;
+    text-align: center;
+    color: var(--blanco);
+    text-shadow: 0 0 40px rgba(232,180,208,0.2);
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    width: 1px; height: 80px; margin: 0 auto 4rem;
+    background: linear-gradient(180deg, transparent, rgba(232,180,208,0.3), transparent);
+  }
+
+  @media (max-width: 600px) {
+    .counter-sep { display: none; }
+    #player { right: 1rem; bottom: 1rem; width: 210px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro">
+  <canvas id="canvas-intro"></canvas>
+  <div class="intro-content">
+    <h1 class="intro-title">Para la niña que hace que<br>la distancia no importe ❤️</h1>
+    <p class="intro-sub">Cada kilómetro vale la pena si al final estás tú.</p>
+    <button class="btn-entrar" onclick="entrar()">✦ &nbsp; Entrar &nbsp; ✦</button>
+  </div>
+</div>
+
+<!-- YOUTUBE PLAYER OCULTO -->
+<div id="yt-player" style="position:fixed;width:0;height:0;overflow:hidden;pointer-events:none;opacity:0"></div>
+
+<!-- BG CANVAS -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- PLAYER -->
+<div id="player">
+  <p class="player-label">♪ &nbsp; Reproduciendo</p>
+  <p class="player-title">Amor a Distancia</p>
+  <canvas id="wave-canvas"></canvas>
+  <div class="player-controls">
+    <button class="btn-play" id="btn-play" onclick="togglePlay()">▶</button>
+    <input type="range" class="vol" id="vol" min="0" max="1" step="0.01" value="0.7" oninput="setVol(this.value)">
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- 1. CARTA -->
+  <section id="carta">
+    <div class="carta-wrapper reveal">
+      <span class="section-tag">✦ &nbsp; Una carta para ti</span>
+      <h2 class="carta-heading">Mi amor,</h2>
+      <p class="carta-text" id="typewriter"></p>
+      <p class="firma" id="firma">— Tuyo, siempre. ❤️</p>
+
+      <!-- corazones -->
+      <div class="heart-float" style="left:10%;bottom:0;--delay:0s;--dur:5s;--dx:15px">❤</div>
+      <div class="heart-float" style="left:30%;bottom:0;--delay:1.5s;--dur:6s;--dx:-20px">💕</div>
+      <div class="heart-float" style="left:60%;bottom:0;--delay:0.8s;--dur:4.5s;--dx:10px">❤</div>
+      <div class="heart-float" style="left:80%;bottom:0;--delay:2.2s;--dur:5.5s;--dx:-12px">💕</div>
+      <div class="heart-float" style="left:50%;bottom:0;--delay:3s;--dur:6.5s;--dx:18px">❤</div>
+    </div>
+  </section>
+
+  <!-- 2. CONTADOR -->
+  <section id="contador">
+    <div class="divider"></div>
+    <span class="section-tag reveal" style="text-align:center">✦ &nbsp; Contando cada momento</span>
+    <h2 class="section-title reveal">Juntos desde entonces</h2>
+    <div class="counter-grid reveal">
+      <div class="counter-item">
+        <span class="counter-num" id="c-dias">000</span>
+        <span class="counter-label">Días</span>
+      </div>
+      <div class="counter-sep">·</div>
+      <div class="counter-item">
+        <span class="counter-num" id="c-horas">00</span>
+        <span class="counter-label">Horas</span>
+      </div>
+      <div class="counter-sep">·</div>
+      <div class="counter-item">
+        <span class="counter-num" id="c-mins">00</span>
+        <span class="counter-label">Minutos</span>
+      </div>
+      <div class="counter-sep">·</div>
+      <div class="counter-item">
+        <span class="counter-num" id="c-segs">00</span>
+        <span class="counter-label">Segundos</span>
+      </div>
+    </div>
+    <p class="reveal" style="color:rgba(240,232,244,0.35);font-size:0.8rem;letter-spacing:0.15em;margin-top:2.5rem;text-transform:uppercase">
+      …y ninguno de ellos ha sido suficiente.
+    </p>
+  </section>
+
+  <!-- 3. MAPA -->
+  <section id="mapa">
+    <div class="divider"></div>
+    <span class="section-tag reveal" style="text-align:center">✦ &nbsp; Dos mundos, un mismo corazón</span>
+    <h2 class="section-title reveal">No existe mapa que mida esto</h2>
+    <div class="mapa-canvas-wrap reveal">
+      <svg id="mapa-svg" viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="glow1" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ff6eb4" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#ff6eb4" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="glow2" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#4a9eff" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#4a9eff" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="blur-sm">
+            <feGaussianBlur stdDeviation="3"/>
+          </filter>
+        </defs>
+
+        <!-- grid faint -->
+        <g opacity="0.06" stroke="#a090c0" stroke-width="0.5">
+          <line x1="0" y1="60" x2="500" y2="60"/>
+          <line x1="0" y1="120" x2="500" y2="120"/>
+          <line x1="0" y1="180" x2="500" y2="180"/>
+          <line x1="0" y1="240" x2="500" y2="240"/>
+          <line x1="100" y1="0" x2="100" y2="300"/>
+          <line x1="200" y1="0" x2="200" y2="300"/>
+          <line x1="300" y1="0" x2="300" y2="300"/>
+          <line x1="400" y1="0" x2="400" y2="300"/>
+        </g>
+
+        <!-- Línea curva que une los dos puntos -->
+        <path id="love-path" d="M 80 200 C 180 40 320 40 420 150"
+          stroke="url(#lineGrad)" stroke-width="1.5" fill="none" stroke-dasharray="4 6" opacity="0.7"/>
+
+        <defs>
+          <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#ff6eb4"/>
+            <stop offset="100%" stop-color="#4a9eff"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Partículas en el path -->
+        <circle id="particle1" r="3" fill="#ff6eb4" opacity="0">
+          <animateMotion dur="3s" repeatCount="indefinite" begin="0s">
+            <mpath href="#love-path"/>
+          </animateMotion>
+          <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite" begin="0s"/>
+        </circle>
+        <circle id="particle2" r="2.5" fill="#c9a96e" opacity="0">
+          <animateMotion dur="3s" repeatCount="indefinite" begin="1s">
+            <mpath href="#love-path"/>
+          </animateMotion>
+          <animate attributeName="opacity" values="0;0.8;0" dur="3s" repeatCount="indefinite" begin="1s"/>
+        </circle>
+        <circle id="particle3" r="2" fill="#4a9eff" opacity="0">
+          <animateMotion dur="3s" repeatCount="indefinite" begin="2s">
+            <mpath href="#love-path"/>
+          </animateMotion>
+          <animate attributeName="opacity" values="0;0.9;0" dur="3s" repeatCount="indefinite" begin="2s"/>
+        </circle>
+
+        <!-- Punto A (tú) -->
+        <ellipse cx="80" cy="200" rx="30" ry="30" fill="url(#glow1)" filter="url(#blur-sm)" opacity="0.6">
+          <animate attributeName="rx" values="28;36;28" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="ry" values="28;36;28" dur="2s" repeatCount="indefinite"/>
+        </ellipse>
+        <circle cx="80" cy="200" r="6" fill="#ff6eb4"/>
+        <circle cx="80" cy="200" r="3" fill="#fff"/>
+        <text x="80" y="228" text-anchor="middle" fill="rgba(240,232,244,0.6)" font-size="10" font-family="Jost, sans-serif" font-weight="300" letter-spacing="0.1em">TÚ</text>
+
+        <!-- Punto B (yo) -->
+        <ellipse cx="420" cy="150" rx="30" ry="30" fill="url(#glow2)" filter="url(#blur-sm)" opacity="0.6">
+          <animate attributeName="rx" values="28;36;28" dur="2s" begin="1s" repeatCount="indefinite"/>
+          <animate attributeName="ry" values="28;36;28" dur="2s" begin="1s" repeatCount="indefinite"/>
+        </ellipse>
+        <circle cx="420" cy="150" r="6" fill="#4a9eff"/>
+        <circle cx="420" cy="150" r="3" fill="#fff"/>
+        <text x="420" y="178" text-anchor="middle" fill="rgba(240,232,244,0.6)" font-size="10" font-family="Jost, sans-serif" font-weight="300" letter-spacing="0.1em">YO</text>
+
+        <!-- Corazón en el centro -->
+        <text x="250" y="100" text-anchor="middle" fill="rgba(232,180,208,0.5)" font-size="20">❤</text>
+      </svg>
+    </div>
+    <p class="reveal" style="color:rgba(240,232,244,0.4);font-size:0.9rem;margin-top:2rem;text-align:center;font-style:italic;font-family:'Cormorant Garamond',serif">
+      "La distancia es solo una prueba de qué tan lejos puede viajar el amor."
+    </p>
+  </section>
+
+  <!-- 4. FINAL -->
+  <section id="final">
+    <canvas id="stars-canvas"></canvas>
+    <div class="reveal" style="position:relative;z-index:2;text-align:center;padding:0 1rem">
+      <p class="final-text">
+        "Sin importar la distancia…<br>siempre voy a elegirte a ti."
+      </p>
+      <p class="final-love">Te amo ❤️</p>
+    </div>
+  </section>
+
+</div><!-- end #main -->
+
+<script>
+// ─── STATE ────────────────────────────────────────────────
+let playing = false;
+let ytPlayer = null;
+let ytReady = false;
+let mainStarted = false;
+
+// ─── INTRO STARS ─────────────────────────────────────────
+(function initIntroStars() {
+  const cvs = document.getElementById('canvas-intro');
+  const ctx = cvs.getContext('2d');
+  const stars = [];
+  function resize() { cvs.width = innerWidth; cvs.height = innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  for (let i = 0; i < 180; i++) {
+    stars.push({
+      x: Math.random() * innerWidth,
+      y: Math.random() * innerHeight,
+      r: Math.random() * 1.5 + 0.3,
+      a: Math.random(),
+      sp: (Math.random() * 0.004 + 0.001),
+      dir: Math.random() > 0.5 ? 1 : -1,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15,
+    });
+  }
+  function drawIntro() {
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    stars.forEach(s => {
+      s.a += s.sp * s.dir;
+      if (s.a > 1 || s.a < 0) s.dir *= -1;
+      s.x += s.vx; s.y += s.vy;
+      if (s.x < 0) s.x = cvs.width;
+      if (s.x > cvs.width) s.x = 0;
+      if (s.y < 0) s.y = cvs.height;
+      if (s.y > cvs.height) s.y = 0;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(232,180,208,${s.a * 0.8})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(drawIntro);
+  }
+  drawIntro();
+})();
+
+// ─── BG CANVAS (siempre visible) ─────────────────────────
+(function initBg() {
+  const cvs = document.getElementById('bg-canvas');
+  const ctx = cvs.getContext('2d');
+  const nebulas = [];
+  const bgStars = [];
+  function resize() { cvs.width = innerWidth; cvs.height = innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < 5; i++) {
+    nebulas.push({
+      x: Math.random() * innerWidth,
+      y: Math.random() * innerHeight,
+      r: 200 + Math.random() * 300,
+      color: i % 2 === 0 ? [26,10,46] : [13,27,62],
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.0003 + Math.random() * 0.0003,
+    });
+  }
+  for (let i = 0; i < 250; i++) {
+    bgStars.push({
+      x: Math.random() * innerWidth,
+      y: Math.random() * innerHeight,
+      r: Math.random() * 1.2 + 0.2,
+      a: Math.random() * 0.7 + 0.1,
+      sp: Math.random() * 0.003 + 0.001,
+      dir: Math.random() > 0.5 ? 1 : -1,
+    });
+  }
+
+  let t = 0;
+  function drawBg() {
+    t++;
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    ctx.fillStyle = '#080810';
+    ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+    nebulas.forEach(n => {
+      const pulse = Math.sin(t * n.speed + n.phase) * 0.15 + 0.85;
+      const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * pulse);
+      grad.addColorStop(0, `rgba(${n.color},0.18)`);
+      grad.addColorStop(1, 'rgba(8,8,16,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r * pulse, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    bgStars.forEach(s => {
+      s.a += s.sp * s.dir;
+      if (s.a > 0.8 || s.a < 0.05) s.dir *= -1;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(240,232,244,${s.a})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(drawBg);
+  }
+  drawBg();
+})();
+
+// ─── YOUTUBE IFRAME API ───────────────────────────────────
+// Carga la API de YouTube
+const ytScript = document.createElement('script');
+ytScript.src = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(ytScript);
+
+function onYouTubeIframeAPIReady() {
+  ytPlayer = new YT.Player('yt-player', {
+    height: '0', width: '0',
+    videoId: 'IGiZns8_ncs',
+    playerVars: { autoplay: 0, loop: 1, playlist: 'IGiZns8_ncs', controls: 0 },
+    events: {
+      onReady: () => { ytReady = true; ytPlayer.setVolume(70); },
+      onStateChange: (e) => {
+        if (e.data === YT.PlayerState.PLAYING) {
+          playing = true;
+          document.getElementById('btn-play').textContent = '⏸';
+        } else if (e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
+          playing = false;
+          document.getElementById('btn-play').textContent = '▶';
+        }
+      }
+    }
+  });
+}
+
+function initAudio() {
+  if (ytReady) { ytPlayer.playVideo(); }
+}
+
+function togglePlay() {
+  if (!ytReady) return;
+  if (playing) { ytPlayer.pauseVideo(); }
+  else { ytPlayer.playVideo(); }
+}
+
+function setVol(v) {
+  if (ytReady) ytPlayer.setVolume(Math.round(parseFloat(v) * 100));
+}
+
+// ─── WAVE VISUALIZER ─────────────────────────────────────
+(function waveViz() {
+  const cvs = document.getElementById('wave-canvas');
+  const ctx = cvs.getContext('2d');
+  cvs.width = 200; cvs.height = 36;
+  let t = 0;
+  function draw() {
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    ctx.beginPath();
+    for (let x = 0; x < cvs.width; x++) {
+      const noise = playing ? (Math.random() - 0.5) * 4 : 0;
+      const y = 18
+        + Math.sin(x * 0.07 + t) * (playing ? 8 : 2)
+        + Math.sin(x * 0.15 + t * 1.3) * (playing ? 4 : 1)
+        + noise;
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = 'rgba(232,180,208,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    t += 0.05;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ─── ENTRAR ───────────────────────────────────────────────
+function entrar() {
+  initAudio();
+  document.getElementById('btn-play').textContent = '⏸';
+
+  const intro = document.getElementById('intro');
+  intro.classList.add('fade-out');
+  setTimeout(() => { intro.style.display = 'none'; }, 2000);
+
+  const main = document.getElementById('main');
+  main.classList.add('visible');
+
+  setTimeout(() => {
+    document.getElementById('player').classList.add('show');
+  }, 1800);
+
+  setTimeout(startTypewriter, 2400);
+  mainStarted = true;
+  startCounter();
+  initFinalStars();
+  observeReveals();
+}
+
+// ─── TYPEWRITER ───────────────────────────────────────────
+const cartaTexto = `Amor mío,
+
+Hay noches en que cierro los ojos y casi puedo escuchar tu voz. Casi puedo sentir que estás aquí, que el espacio entre nosotros es solo un sueño del que pronto voy a despertar.
+
+La distancia duele, no te voy a mentir. Duele cuando quiero tomarte la mano y no puedo. Duele cuando ríes al teléfono y no puedo verte los ojos. Duele cada vez que digo "buenas noches" y sé que no puedo quedarme.
+
+Pero luego recuerdo por qué.
+
+Recuerdo que elegí quererte a ti, con todo lo que eso significa. Recuerdo que cada llamada es un regalo, que cada foto tuya guarda un poco de tu luz, y que cada día que pasa es un día menos de distancia.
+
+Pienso en ti cuando las noches están muy quietas. Cuando la luna está llena y quiero que la veas también. Cuando escucho una canción que me recuerda tu nombre.
+
+Quiero que sepas que no me arrepiento de nada. Que te esperaría todas las noches del mundo si hace falta.
+
+Porque tú eres de esas personas que valen el camino entero.`;
+
+function startTypewriter() {
+  const el = document.getElementById('typewriter');
+  const firma = document.getElementById('firma');
+  let i = 0;
+  function type() {
+    if (i < cartaTexto.length) {
+      const char = cartaTexto[i];
+      if (char === '\n') el.innerHTML += '<br>';
+      else el.innerHTML += char;
+      i++;
+      setTimeout(type, char === '.' || char === ',' ? 60 : 18);
+    } else {
+      setTimeout(() => firma.classList.add('show'), 600);
+    }
+  }
+  type();
+}
+
+// ─── CONTADOR ─────────────────────────────────────────────
+// Fecha de inicio de la relación (ajusta aquí)
+const START_DATE = new Date('2024-02-14T00:00:00');
+
+function startCounter() {
+  function update() {
+    const now = new Date();
+    const diff = now - START_DATE;
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    const segs = Math.floor((diff % 60000) / 1000);
+    document.getElementById('c-dias').textContent = String(days).padStart(3, '0');
+    document.getElementById('c-horas').textContent = String(hours).padStart(2, '0');
+    document.getElementById('c-mins').textContent = String(mins).padStart(2, '0');
+    document.getElementById('c-segs').textContent = String(segs).padStart(2, '0');
+  }
+  update();
+  setInterval(update, 1000);
+}
+
+// ─── FINAL STARS ─────────────────────────────────────────
+function initFinalStars() {
+  const cvs = document.getElementById('stars-canvas');
+  const ctx = cvs.getContext('2d');
+  const section = document.getElementById('final');
+  function resize() { cvs.width = section.offsetWidth; cvs.height = section.offsetHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const stars = [];
+  for (let i = 0; i < 300; i++) {
+    stars.push({
+      x: Math.random() * cvs.width,
+      y: Math.random() * cvs.height,
+      r: Math.random() * 2 + 0.3,
+      a: Math.random(),
+      sp: Math.random() * 0.005 + 0.002,
+      dir: Math.random() > 0.5 ? 1 : -1,
+      vy: Math.random() * 0.3 + 0.05,
+    });
+  }
+
+  // Luna
+  const moon = { x: cvs.width * 0.75, y: 80, r: 40 };
+
+  function draw() {
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+    // Luna
+    const mg = ctx.createRadialGradient(moon.x, moon.y, 0, moon.x, moon.y, moon.r * 3);
+    mg.addColorStop(0, 'rgba(201,169,110,0.15)');
+    mg.addColorStop(1, 'rgba(201,169,110,0)');
+    ctx.fillStyle = mg;
+    ctx.beginPath(); ctx.arc(moon.x, moon.y, moon.r * 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(moon.x, moon.y, moon.r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(201,169,110,0.8)'; ctx.fill();
+
+    stars.forEach(s => {
+      s.y += s.vy;
+      if (s.y > cvs.height) { s.y = 0; s.x = Math.random() * cvs.width; }
+      s.a += s.sp * s.dir;
+      if (s.a > 1 || s.a < 0.1) s.dir *= -1;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(240,232,244,${s.a * 0.9})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ─── SCROLL REVEALS ──────────────────────────────────────
+function observeReveals() {
+  const els = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  els.forEach(el => io.observe(el));
+}
+</script>
+</body>
+</html>
